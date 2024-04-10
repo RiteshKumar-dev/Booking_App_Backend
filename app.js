@@ -441,11 +441,6 @@ app.use('/api', placeRoute);
 app.use('/api', bookingRoute);
 app.use('/api', reviewRoute);
 
-
-
-
-
-
 const PORT = 5000
 connectDb().then(() => {
   app.listen(PORT, () => {
