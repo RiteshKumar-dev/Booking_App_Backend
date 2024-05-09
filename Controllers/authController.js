@@ -1,4 +1,7 @@
 const User = require('../Models/UserModel');
+const GoogleUser = require('../Models/GoogleUser');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const authController = {
   home: async (req, res) => {
@@ -40,7 +43,27 @@ const authController = {
       console.log("Error in login api route...", err)
     }
   },
-
+  googleLogin: async (req, res) => {
+    try {
+      const { tokenId } = req.body;
+      const ticket = await client.verifyIdToken({
+        idToken: tokenId,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      console.log("Data from google route controllers :", payload)
+      const { email, name, picture, jti, sub } = payload;
+      let user = await GoogleUser.findOne({ email });
+      if (!user) {
+        user = await GoogleUser.create({ username: name, email: email, profilePic: picture, password: jti, sub: sub });
+      }
+      console.log(user)
+      res.status(200).json({ msg: "Google login successful", token: await user.genrateToken(), userId: user._id.toString(), userData: user });
+    } catch (err) {
+      console.error("Error in Google login API route...", err);
+      res.status(500).json({ msg: "Internal Server Error" });
+    }
+  },
   getUser: (req, res) => {
     try {
       const userData = req.user;

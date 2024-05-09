@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../Models/UserModel")
+const User = require("../Models/UserModel");
+const GoogleUser = require("../Models/GoogleUser");
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -12,16 +13,25 @@ const authMiddleware = async (req, res, next) => {
     console.log("token from authmiddleware:", jwtToken);
 
     try {
-      const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET_KEY)
-      const userData = await User.findOne({ email: isVerified.email }).select({ password: 0 })
-      console.log(userData)
-      req.user = userData
-      req.token = token
-      req.userId = userData._id
+      const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET_KEY);
+      console.log("here:", isVerified)
+      let userData;
+
+      userData = await User.findOne({ email: isVerified.email }).select({ password: 0 });
+      if (!userData) {
+        userData = await GoogleUser.findOne({ email: isVerified.email }).select({ password: 0 });
+      }
+
+      if (!userData) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      req.user = userData;
+      req.token = token;
+      req.userId = userData._id;
       next();
     } catch (error) {
-      return res.status(401).json({ message: "Invalid TOken..." });
-
+      return res.status(401).json({ message: "Invalid Token..." });
     }
 
   } catch (error) {
