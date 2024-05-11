@@ -5,7 +5,9 @@ const jwt = require("jsonwebtoken");
 const googleUserSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true
+    required: true,
+    minlength: 3,
+    maxlength: 50
   },
   email: {
     type: String,
@@ -18,7 +20,8 @@ const googleUserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    minlength: 6
   },
   sub: {
     type: String,
@@ -29,7 +32,6 @@ const googleUserSchema = new mongoose.Schema({
     default: false
   }
 });
-
 
 googleUserSchema.pre('save', async function (next) {
   console.log("Pre method", this);
@@ -46,8 +48,7 @@ googleUserSchema.pre('save', async function (next) {
   }
 })
 
-
-googleUserSchema.methods.genrateToken = async function () {
+googleUserSchema.methods.generateToken = async function () {
   try {
     return jwt.sign({
       userId: this._id.toString(),
@@ -64,7 +65,6 @@ googleUserSchema.methods.genrateToken = async function () {
 googleUserSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 }
-
 
 const GoogleUser = mongoose.model("GoogleUser", googleUserSchema);
 
