@@ -12,6 +12,7 @@ const placeSchema = new mongoose.Schema({
   checkOut: Number,
   maxGuests: Number,
   price: Number,
+  category: String,
   likeStatus: { type: Boolean, default: false },
 });
 const PlaceModel = mongoose.model('Place', placeSchema);
