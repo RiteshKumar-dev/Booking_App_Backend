@@ -1,4 +1,5 @@
 const Booking = require('../Models/BookingModel');
+const Stripe = require('stripe')
 
 const createBooking = async (req, res) => {
   try {
@@ -49,4 +50,52 @@ const deleteBooking = async (req, res) => {
   }
 };
 
-module.exports = { createBooking, getUserBookings, deleteBooking };
+const getCheckOut = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const booking = await Booking.findById(id).populate('place');
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Update isBooked to true
+    booking.isBooked = true;
+    await booking.save();
+
+    const stripe = require('stripe')(process.env.Stripe_Secret_Key);
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `Booking for ${booking.place.title}`,
+            description: `
+              Check-In: ${booking.checkIn.toDateString()}
+              Check-Out: ${booking.checkOut.toDateString()}
+              Number of Guests: ${booking.numberOfGuests}
+              Name: ${booking.name}
+              Phone: ${booking.phone}
+              -----------------------
+            `,
+          },
+          unit_amount: booking.price * 100, // Price in cents
+        },
+        quantity: 1,
+      }],
+      success_url: `${process.env.Client_Side_URL}/account/bookings`,
+      cancel_url: `${process.env.Client_Side_URL}/`,
+    });
+
+    res.status(200).json({ id: session.id, url: session.url, bookingData: booking });
+  } catch (error) {
+    console.log("getCheckOut Route...", error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+module.exports = { createBooking, getUserBookings, deleteBooking, getCheckOut };
