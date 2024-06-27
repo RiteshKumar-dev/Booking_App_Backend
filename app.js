@@ -20,7 +20,7 @@ const Review = require("./Models/ReviewModel")
 
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://riteshdev-bookingapp.netlify.app", "https://whimsical-vacherin-d1d018.netlify.app"],
+  origin: ["http://localhost:5173", "https://riteshdev-bookingapp.netlify.app"],
   methods: "GET,POST,PATCH,DELETE,UPDATE,PUT,HEAD ",
   credentials: true,
 };
